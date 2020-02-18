@@ -1,27 +1,79 @@
-# AngularDisplay
+# Angular-Practice-Services
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 9.0.2.
+Goal: Set up a service to display the input value entered in input filed.
 
-## Development server
+---
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
+##### src\app\app.component.html
+- input field
 
-## Code scaffolding
+- ```<display></display>```: to display output
+- ngModel: property biding - updating DOM element
+- ngModelChange: event binding - notifies changes in DOM
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
 
-## Build
+##### src\app\app.component.ts
+- ```import { DisplayService } ```
+- ```private unsubscribe = new Subject<void>();```
+- ngOnInit(): getInput
+- ngOnDestroy(): unsubscribe
+- updateService: setInput
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory. Use the `--prod` flag for a production build.
+```typescript
+export class AppComponent implements OnInit, OnDestroy {
+  public name: string;
+  private unsubscribe = new Subject<void>();
+  constructor(private displayer: DisplayService) { }
 
-## Running unit tests
+  public ngOnInit(): void {
+    this.displayer
+      .getInput()
+      .pipe(takeUntil(this.unsubscribe))
+      .subscribe(input => {
+        this.name = input;
+      });
+  }
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+  public ngOnDestroy(): void {
+    this.unsubscribe.next();
+    this.unsubscribe.complete();
+  }
 
-## Running end-to-end tests
+  public updateService(value: string) {
+    this.displayer.setInput(value);
+  }
+}
+```
 
-Run `ng e2e` to execute the end-to-end tests via [Protractor](http://www.protractortest.org/).
+##### src\app\app.module.ts
+- ```declarations: [DisplayComponent]```: register DisplayComponent
 
-## Further help
+##### src\app\display.component.html
+- ```<div>{{ display }}</div>```
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI README](https://github.com/angular/angular-cli/blob/master/README.md).
+##### src\app\display.component.ts
+- ```import { DisplayService } ```
+- ```private unsubscribe = new Subject<void>();```
+- ngOnInit(): getInput
+- ngOnDestroy(): unsubscribe
+
+##### src\app\display.service.ts
+- BehaviorSubject
+- public getInput()
+- public setInput
+```typescript
+export class DisplayService {
+  private display: BehaviorSubject<string>;
+  constructor() {
+    this.display = new BehaviorSubject<string>('Enter here...'); // default value as 'Enter here...'
+  }
+
+  public getInput(): Observable<string> {
+    return this.display.asObservable();
+  }
+
+  public setInput(input: string): void {
+    this.display.next(input);
+  }
+}
+```
